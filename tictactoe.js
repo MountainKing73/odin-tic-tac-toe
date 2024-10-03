@@ -1,5 +1,9 @@
 function GameBoard() {
-  const board = [" ", " ", " ", " ", " ", " ", " ", " ", " "];
+  let board = [" ", " ", " ", " ", " ", " ", " ", " ", " "];
+
+  const reset = () => {
+    board = [" ", " ", " ", " ", " ", " ", " ", " ", " "];
+  };
 
   const getBoard = () => board;
 
@@ -15,7 +19,7 @@ function GameBoard() {
     console.log(board[6] + "|" + board[7] + "|" + board[8]);
   };
 
-  return { getBoard, markSpot, printBoard };
+  return { reset, getBoard, markSpot, printBoard };
 }
 
 function GameController() {
@@ -31,10 +35,12 @@ function GameController() {
     return spot1 === spot2 && spot2 === spot3 && spot1 != " ";
   }
 
+  const resetBoard = () => board.reset();
+
   const playRound = (spotNumber) => {
     board.markSpot(spotNumber, currentPlayer.token);
 
-    board.printBoard();
+    //board.printBoard();
 
     // Check for winner
     currentBoard = board.getBoard();
@@ -48,16 +54,18 @@ function GameController() {
       compareSpots(currentBoard[0], currentBoard[4], currentBoard[8]) ||
       compareSpots(currentBoard[2], currentBoard[4], currentBoard[6])
     ) {
-      console.log(currentPlayer.token + " is the winner!");
-      return false;
+      const result = currentPlayer.token + " is the winner!";
+      console.log(result);
+      return [true, result];
     } else if (currentBoard.filter((item) => item != " ").length === 9) {
-      console.log("Draw!");
-      return false;
+      const result = "Draw!";
+      console.log(result);
+      return [true, result];
     }
     // Change players
     currentPlayer = currentPlayer === players[0] ? players[1] : players[0];
 
-    return true;
+    return [false, ""];
   };
 
   const getPlayerChoice = () => {
@@ -66,38 +74,45 @@ function GameController() {
     return input;
   };
 
-  return { playRound, getPlayerChoice, getCurToken };
+  return { resetBoard, playRound, getPlayerChoice, getCurToken };
 }
 
 function GameUI() {
   let game = GameController();
 
-  function newClicked(event) {
-    let game2 = GameController();
+  function newClicked() {
+    game = GameController();
+    newGame();
   }
 
+  const newButton = document.querySelector("#startGame");
+  newButton.addEventListener("click", newClicked);
+
   function spotClicked(event) {
-    console.log(event.target);
     const choice = event.target.dataset.spotNum;
     const currentToken = game.getCurToken();
-    console.log("Clicked on spot: " + choice);
-    if (game.playRound(choice)) {
+    let [done, result] = game.playRound(choice);
+    if (!done) {
       const spot = document.querySelector("[data-spot-num='" + choice + "']");
       spot.textContent = currentToken;
       spot.removeEventListener("click", spotClicked);
     } else {
       const spot = document.querySelector("[data-spot-num='" + choice + "']");
       spot.textContent = currentToken;
+      const spots = document.querySelectorAll(".spot");
+      spots.forEach((s) => {
+        s.removeEventListener("click", spotClicked);
+      });
+      alert(result);
     }
   }
 
   const newGame = () => {
-    const newButton = document.querySelector("#startGame");
-    newButton.addEventListener("click", newClicked);
-
+    game.resetBoard();
     for (let i = 0; i < 9; i++) {
       const spot = document.querySelector("[data-spot-num='" + i + "']");
       spot.addEventListener("click", spotClicked);
+      spot.textContent = "";
     }
   };
 
