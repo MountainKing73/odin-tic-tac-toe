@@ -25,6 +25,8 @@ function GameController() {
 
   let currentPlayer = players[0];
 
+  const getCurToken = () => currentPlayer.token;
+
   function compareSpots(spot1, spot2, spot3) {
     return spot1 === spot2 && spot2 === spot3 && spot1 != " ";
   }
@@ -64,17 +66,43 @@ function GameController() {
     return input;
   };
 
-  return { playRound, getPlayerChoice };
+  return { playRound, getPlayerChoice, getCurToken };
 }
 
-function newClicked(event) {
+function GameUI() {
   let game = GameController();
-  let choice = game.getPlayerChoice();
 
-  while (game.playRound(choice)) {
-    choice = game.getPlayerChoice();
+  function newClicked(event) {
+    let game2 = GameController();
   }
+
+  function spotClicked(event) {
+    console.log(event.target);
+    const choice = event.target.dataset.spotNum;
+    const currentToken = game.getCurToken();
+    console.log("Clicked on spot: " + choice);
+    if (game.playRound(choice)) {
+      const spot = document.querySelector("[data-spot-num='" + choice + "']");
+      spot.textContent = currentToken;
+      spot.removeEventListener("click", spotClicked);
+    } else {
+      const spot = document.querySelector("[data-spot-num='" + choice + "']");
+      spot.textContent = currentToken;
+    }
+  }
+
+  const newGame = () => {
+    const newButton = document.querySelector("#startGame");
+    newButton.addEventListener("click", newClicked);
+
+    for (let i = 0; i < 9; i++) {
+      const spot = document.querySelector("[data-spot-num='" + i + "']");
+      spot.addEventListener("click", spotClicked);
+    }
+  };
+
+  return { newGame };
 }
 
-const newButton = document.querySelector("#startGame");
-newButton.addEventListener("click", newClicked);
+let ui = GameUI();
+ui.newGame();
